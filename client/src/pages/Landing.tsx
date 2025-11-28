@@ -1,12 +1,9 @@
 import { MessageCircle, Users, Zap, Shield, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Link } from "wouter";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
-  };
-
   const features = [
     {
       icon: MessageCircle,
@@ -55,9 +52,11 @@ export default function Landing() {
 
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <Button onClick={handleLogin} data-testid="button-login">
-                Sign In
-              </Button>
+              <Link href="/auth">
+                <Button variant="outline" className="gap-2" data-testid="button-login">
+                  Sign In
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -83,10 +82,12 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" onClick={handleLogin} className="w-full sm:w-auto gap-2" data-testid="button-get-started">
-              <MessageCircle className="h-5 w-5" />
-              Get Started Free
-            </Button>
+            <Link href="/auth">
+              <Button size="lg" className="w-full sm:w-auto gap-2" data-testid="button-get-started">
+                <MessageCircle className="h-5 w-5" />
+                Get Started Free
+              </Button>
+            </Link>
             <Button size="lg" variant="outline" className="w-full sm:w-auto">
               Learn More
             </Button>
@@ -150,10 +151,12 @@ export default function Landing() {
               Join thousands of users who are already enjoying seamless communication. 
               Sign up now and start chatting in seconds.
             </p>
-            <Button size="lg" onClick={handleLogin} className="gap-2" data-testid="button-join-now">
-              <Users className="h-5 w-5" />
-              Join Now — It's Free
-            </Button>
+            <Link href="/auth">
+              <Button size="lg" className="gap-2" data-testid="button-join-now">
+                <Users className="h-5 w-5" />
+                Join Now — It's Free
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

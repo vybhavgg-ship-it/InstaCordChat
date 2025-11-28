@@ -27,6 +27,8 @@ export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  searchUsersByUsername(username: string, limit?: number): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   updateUserStatus(userId: string, status: string, statusMessage?: string): Promise<User | undefined>;
@@ -80,6 +82,27 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async searchUsersByUsername(username: string, limit: number = 10): Promise<User[]> {
+    return db
+      .select()
+      .from(users)
+      .where(
+        or(
+          eq(users.username, username),
+          and(
+            users.username.like(`${username}%`),
+            users.username.notEqualsInsensitive(null)
+          )
+        )
+      )
+      .limit(limit);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

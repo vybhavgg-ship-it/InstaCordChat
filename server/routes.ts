@@ -7,6 +7,7 @@ import { insertChannelSchema, insertMessageSchema, insertFriendshipSchema } from
 import { z } from "zod";
 import { parse as parseCookie } from "cookie";
 import type { IncomingMessage } from "http";
+import bcrypt from "bcryptjs";
 
 // Store connected clients
 const clients = new Map<string, WebSocket>();
@@ -45,12 +46,94 @@ export async function registerRoutes(
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.claims?.sub || req.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Password signup route
+  app.post("/api/auth/signup", async (req: any, res) => {
+    try {
+      const { email, username, password, firstName, lastName } = req.body;
+
+      // Validation
+      if (!email || !username || !password) {
+        return res.status(400).json({ message: "Email, username, and password required" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+
+      // Check if email or username exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already in use" });
+      }
+
+      const existingUsername = await storage.getUserByUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // Create user
+      const user = await storage.upsertUser({
+        email,
+        username,
+        passwordHash,
+        firstName: firstName || "",
+        lastName: lastName || "",
+      });
+
+      // Create session
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.json({ success: true, user });
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+      res.status(500).json({ message: "Signup failed" });
+    }
+  });
+
+  // Password login route
+  app.post("/api/auth/login", async (req: any, res) => {
+    try {
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user || !user.passwordHash) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+      if (!passwordMatch) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      // Create session
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.json({ success: true, user });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
     }
   });
 
@@ -62,6 +145,24 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Search users by username
+  app.get("/api/users/search/:username", isAuthenticated, async (req, res) => {
+    try {
+      const { username } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      
+      if (!username || username.length < 1) {
+        return res.json([]);
+      }
+
+      const results = await storage.searchUsersByUsername(username, limit);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
     }
   });
 

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/Landing";
+import Auth from "@/pages/Auth";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/not-found";
 import { Loader2 } from "lucide-react";
@@ -23,7 +24,10 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/auth" component={Auth} />
+        </>
       ) : (
         <Route path="/" component={Home} />
       )}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -74,7 +74,7 @@ export default function Auth() {
           <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
             <MessageCircle className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">Chatly</span>
+          <span className="text-xl font-bold text-foreground">STEALTHchat</span>
         </div>
         <ThemeToggle />
       </header>
@@ -87,7 +87,7 @@ export default function Auth() {
             </h1>
             <p className="text-muted-foreground mb-6">
               {isSignup
-                ? "Join Chatly and start chatting"
+                ? "Join STEALTHchat and start chatting"
                 : "Welcome back! Sign in to continue"}
             </p>
 
@@ -175,6 +175,17 @@ export default function Auth() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-border">
+              <p className="text-xs text-muted-foreground text-center mb-4">OR</p>
+              <Button
+                variant="outline"
+                className="w-full gap-2 mb-4"
+                onClick={() => window.location.href = "/api/login"}
+                data-testid="button-replit-auth"
+              >
+                <Lock className="h-4 w-4" />
+                Sign in with Replit
+              </Button>
+
               <p className="text-sm text-muted-foreground text-center">
                 {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
                 <button

@@ -185,7 +185,7 @@ export default function Home() {
               <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center">
                 <MessageCircle className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold text-foreground">Chatly</span>
+              <span className="text-lg font-bold text-foreground">STEALTHchat</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -334,7 +334,7 @@ export default function Home() {
                 <MessageCircle className="h-12 w-12 text-primary" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-2">
-                Welcome to Chatly
+                Welcome to STEALTHchat
               </h2>
               <p className="text-muted-foreground mb-6 max-w-md">
                 Select a conversation or start a new chat to begin messaging.

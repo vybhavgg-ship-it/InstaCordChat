@@ -82,15 +82,17 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth">
+            <Link href="/auth?signup=true">
               <Button size="lg" className="w-full sm:w-auto gap-2" data-testid="button-get-started">
                 <MessageCircle className="h-5 w-5" />
-                Get Started Free
+                Sign Up Free
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              Learn More
-            </Button>
+            <Link href="/auth">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto" data-testid="button-signin">
+                Sign In
+              </Button>
+            </Link>
           </div>
 
           {/* Stats */}
@@ -151,7 +153,7 @@ export default function Landing() {
               Join thousands of users who are already enjoying seamless communication. 
               Sign up now and start chatting in seconds.
             </p>
-            <Link href="/auth">
+            <Link href="/auth?signup=true">
               <Button size="lg" className="gap-2" data-testid="button-join-now">
                 <Users className="h-5 w-5" />
                 Join Now — It's Free

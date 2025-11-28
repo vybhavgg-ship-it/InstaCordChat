@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { useLocation } from "wouter";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Auth() {
-  const [isSignup, setIsSignup] = useState(false);
+  const [location] = useLocation();
+  const [isSignup, setIsSignup] = useState(new URLSearchParams(location.split("?")[1] || "").get("signup") === "true");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",

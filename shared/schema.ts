@@ -28,6 +28,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   username: varchar("username", { length: 50 }).unique(),
+  displayName: varchar("display_name", { length: 100 }),
   passwordHash: varchar("password_hash"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -66,11 +67,34 @@ export const messages = pgTable("messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   channelId: varchar("channel_id").references(() => channels.id).notNull(),
   senderId: varchar("sender_id").references(() => users.id).notNull(),
-  content: text("content").notNull(),
+  content: text("content"),
   replyToId: varchar("reply_to_id"),
   isEdited: boolean("is_edited").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Media attachments (photos, videos, files)
+export const mediaAttachments = pgTable("media_attachments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  messageId: varchar("message_id").references(() => messages.id).notNull(),
+  fileUrl: varchar("file_url").notNull(),
+  fileName: varchar("file_name").notNull(),
+  fileType: varchar("file_type").notNull(), // 'image', 'video', 'file'
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Voice calls
+export const voiceCalls = pgTable("voice_calls", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  channelId: varchar("channel_id").references(() => channels.id).notNull(),
+  initiatorId: varchar("initiator_id").references(() => users.id).notNull(),
+  status: varchar("status", { length: 20 }).default("ringing"), // 'ringing', 'active', 'ended'
+  startTime: timestamp("start_time").defaultNow(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration"), // in seconds
 });
 
 // Message reactions
@@ -100,6 +124,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   reactions: many(reactions),
   sentFriendRequests: many(friendships, { relationName: "requester" }),
   receivedFriendRequests: many(friendships, { relationName: "addressee" }),
+  initiatedCalls: many(voiceCalls),
 }));
 
 export const channelsRelations = relations(channels, ({ one, many }) => ({
@@ -118,6 +143,16 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
   sender: one(users, { fields: [messages.senderId], references: [users.id] }),
   replyTo: one(messages, { fields: [messages.replyToId], references: [messages.id] }),
   reactions: many(reactions),
+  media: many(mediaAttachments),
+}));
+
+export const mediaAttachmentsRelations = relations(mediaAttachments, ({ one }) => ({
+  message: one(messages, { fields: [mediaAttachments.messageId], references: [messages.id] }),
+}));
+
+export const voiceCallsRelations = relations(voiceCalls, ({ one }) => ({
+  channel: one(channels, { fields: [voiceCalls.channelId], references: [channels.id] }),
+  initiator: one(users, { fields: [voiceCalls.initiatorId], references: [users.id] }),
 }));
 
 export const reactionsRelations = relations(reactions, ({ one }) => ({
@@ -137,6 +172,8 @@ export const insertChannelMemberSchema = createInsertSchema(channelMembers).omit
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertReactionSchema = createInsertSchema(reactions).omit({ id: true, createdAt: true });
 export const insertFriendshipSchema = createInsertSchema(friendships).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMediaAttachmentSchema = createInsertSchema(mediaAttachments).omit({ id: true, createdAt: true });
+export const insertVoiceCallSchema = createInsertSchema(voiceCalls).omit({ id: true, startTime: true });
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
@@ -158,10 +195,17 @@ export type InsertReaction = z.infer<typeof insertReactionSchema>;
 export type Friendship = typeof friendships.$inferSelect;
 export type InsertFriendship = z.infer<typeof insertFriendshipSchema>;
 
+export type MediaAttachment = typeof mediaAttachments.$inferSelect;
+export type InsertMediaAttachment = z.infer<typeof insertMediaAttachmentSchema>;
+
+export type VoiceCall = typeof voiceCalls.$inferSelect;
+export type InsertVoiceCall = z.infer<typeof insertVoiceCallSchema>;
+
 // Extended types for frontend
 export type MessageWithSender = Message & {
   sender: User;
   reactions?: (Reaction & { user: User })[];
+  media?: MediaAttachment[];
 };
 
 export type ChannelWithMembers = Channel & {

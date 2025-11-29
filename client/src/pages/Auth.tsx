@@ -14,6 +14,7 @@ export default function Auth() {
   const [formData, setFormData] = useState({
     email: "",
     username: "",
+    displayName: "",
     password: "",
     firstName: "",
     lastName: "",
@@ -107,6 +108,17 @@ export default function Auth() {
                       data-testid="input-email"
                     />
                   </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">Display Name</label>
+                    <Input
+                      type="text"
+                      name="displayName"
+                      placeholder="How others will see you"
+                      value={formData.displayName}
+                      onChange={handleChange}
+                      data-testid="input-displayname"
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-sm font-medium text-foreground">First Name</label>
@@ -193,7 +205,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => {
                     setIsSignup(!isSignup);
-                    setFormData({ email: "", username: "", password: "", firstName: "", lastName: "" });
+                    setFormData({ email: "", username: "", displayName: "", password: "", firstName: "", lastName: "" });
                   }}
                   className="text-primary hover:underline font-medium"
                   data-testid={isSignup ? "button-switch-signin" : "button-switch-signup"}

@@ -177,77 +177,72 @@
   }
 }
 
-@keyframes floatingBg {
-  0% {
-    transform: translateY(0px) translateX(0px);
+@keyframes floatingOrbs {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0.5;
   }
-  25% {
-    transform: translateY(-20px) translateX(20px);
+  33% {
+    transform: translate(100px, -100px);
+    opacity: 0.3;
   }
-  50% {
-    transform: translateY(-40px) translateX(-20px);
-  }
-  75% {
-    transform: translateY(-20px) translateX(-40px);
-  }
-  100% {
-    transform: translateY(0px) translateX(0px);
+  66% {
+    transform: translate(-100px, 100px);
+    opacity: 0.4;
   }
 }
 
 @layer base {
+  html {
+    background: linear-gradient(
+      135deg,
+      hsl(var(--background)),
+      hsl(262 80% 60% / 0.08),
+      hsl(197 92% 50% / 0.06),
+      hsl(var(--background))
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite;
+    background-attachment: fixed;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply font-sans antialiased text-foreground;
-    background: linear-gradient(
-      -45deg,
-      hsl(var(--background)),
-      hsl(var(--primary) / 0.1),
-      hsl(262, 83%, 68% / 0.05),
-      hsl(var(--background))
-    );
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
+    background: transparent;
     position: relative;
-    min-height: 100vh;
   }
 
-  body::before {
+  body::after {
     content: '';
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(
-      circle at 20% 50%,
-      hsl(262, 83%, 68% / 0.1),
-      transparent 50%
-    ),
-    radial-gradient(
-      circle at 80% 80%,
-      hsl(197, 92%, 45% / 0.08),
-      transparent 50%
-    );
-    animation: floatingBg 20s ease-in-out infinite;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 30%, hsl(262 80% 60% / 0.12), transparent 40%),
+      radial-gradient(circle at 80% 70%, hsl(197 92% 50% / 0.1), transparent 40%);
+    animation: floatingOrbs 25s ease-in-out infinite;
     pointer-events: none;
     z-index: -1;
   }
 }
 
-.dark body {
+.dark html {
   background: linear-gradient(
-    -45deg,
+    135deg,
     hsl(var(--background)),
-    hsl(262, 83%, 48% / 0.15),
-    hsl(197, 92%, 45% / 0.1),
+    hsl(262 75% 50% / 0.15),
+    hsl(197 92% 45% / 0.12),
     hsl(var(--background))
   );
   background-size: 400% 400%;
-  animation: gradientShift 15s ease infinite;
+  animation: gradientShift 20s ease infinite;
+  background-attachment: fixed;
 }
 
 /**

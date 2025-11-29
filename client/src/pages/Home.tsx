@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { LogOut, Settings, Search, MessageCircle, Menu, X } from "lucide-react";
+import { LogOut, Settings, Search, MessageCircle, Menu, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +17,7 @@ import { ChannelList } from "@/components/ChannelList";
 import { ChatView } from "@/components/ChatView";
 import { CreateChannelDialog } from "@/components/CreateChannelDialog";
 import { UserProfileCard } from "@/components/UserProfileCard";
+import { VoiceCallWidget } from "@/components/VoiceCallWidget";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -31,6 +32,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserProfile, setSelectedUserProfile] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [voiceCallOpen, setVoiceCallOpen] = useState(false);
 
   // WebSocket connection
   const {
@@ -306,6 +308,17 @@ export default function Home() {
                 )}
                 title={isConnected ? "Connected" : "Disconnected"}
               />
+              {activeChannel && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setVoiceCallOpen(true)}
+                  data-testid="button-start-voice-call"
+                  title="Start voice call"
+                >
+                  <Phone className="h-4 w-4" />
+                </Button>
+              )}
               <ThemeToggle />
             </div>
           </div>
@@ -347,6 +360,16 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* Voice Call Widget */}
+      {activeChannel && (
+        <VoiceCallWidget
+          channelId={activeChannel.id}
+          currentUserId={user?.id || ""}
+          isVisible={voiceCallOpen}
+          onClose={() => setVoiceCallOpen(false)}
+        />
+      )}
 
       {/* Create Channel Dialog */}
       <CreateChannelDialog

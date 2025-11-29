@@ -8,6 +8,8 @@ import { z } from "zod";
 import { parse as parseCookie } from "cookie";
 import type { IncomingMessage } from "http";
 import bcrypt from "bcryptjs";
+import path from "path";
+import { promises as fs } from "fs";
 
 // Store connected clients
 const clients = new Map<string, WebSocket>();
@@ -42,6 +44,43 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Create uploads directory if it doesn't exist
+  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  await fs.mkdir(uploadsDir, { recursive: true });
+
+  // Media upload endpoint (simple file storage)
+  app.post("/api/media/upload", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { messageId, fileName, fileType, base64Data } = req.body;
+
+      if (!messageId || !fileName || !fileType || !base64Data) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Decode base64 and store (in production, use cloud storage)
+      const buffer = Buffer.from(base64Data, "base64");
+      const storagePath = path.join(uploadsDir, `${Date.now()}-${fileName}`);
+      const fileUrl = `/uploads/${path.basename(storagePath)}`;
+
+      await fs.writeFile(storagePath, buffer);
+
+      const media = await storage.addMediaAttachment({
+        messageId,
+        fileUrl,
+        fileName,
+        fileType,
+        mimeType: req.body.mimeType || "application/octet-stream",
+        fileSize: buffer.length,
+      });
+
+      res.json(media);
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ message: "Upload failed" });
+    }
+  });
 
   // Auth routes
   app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
@@ -84,9 +123,11 @@ export async function registerRoutes(
       const passwordHash = await bcrypt.hash(password, 10);
 
       // Create user
+      const { displayName } = req.body;
       const user = await storage.upsertUser({
         email,
         username,
+        displayName: displayName || username,
         passwordHash,
         firstName: firstName || "",
         lastName: lastName || "",

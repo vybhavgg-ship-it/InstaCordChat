@@ -5,6 +5,8 @@ import {
   messages,
   reactions,
   friendships,
+  mediaAttachments,
+  voiceCalls,
   type User,
   type UpsertUser,
   type Channel,
@@ -19,6 +21,10 @@ import {
   type InsertFriendship,
   type MessageWithSender,
   type ChannelWithMembers,
+  type MediaAttachment,
+  type InsertMediaAttachment,
+  type VoiceCall,
+  type InsertVoiceCall,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, inArray } from "drizzle-orm";
@@ -70,6 +76,16 @@ export interface IStorage {
 
   // Direct message helpers
   findDirectChannel(userId1: string, userId2: string): Promise<Channel | undefined>;
+
+  // Media operations
+  addMediaAttachment(media: InsertMediaAttachment): Promise<MediaAttachment>;
+  getMessageMedia(messageId: string): Promise<MediaAttachment[]>;
+
+  // Voice call operations
+  createVoiceCall(call: InsertVoiceCall): Promise<VoiceCall>;
+  getVoiceCall(id: string): Promise<VoiceCall | undefined>;
+  updateVoiceCallStatus(id: string, status: string, endTime?: Date, duration?: number): Promise<VoiceCall | undefined>;
+  getChannelActiveCalls(channelId: string): Promise<VoiceCall[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -458,6 +474,57 @@ export class DatabaseStorage implements IStorage {
       }
     }
     return undefined;
+  }
+
+  // Media operations
+  async addMediaAttachment(media: InsertMediaAttachment): Promise<MediaAttachment> {
+    const [attachment] = await db.insert(mediaAttachments).values(media).returning();
+    return attachment;
+  }
+
+  async getMessageMedia(messageId: string): Promise<MediaAttachment[]> {
+    return db
+      .select()
+      .from(mediaAttachments)
+      .where(eq(mediaAttachments.messageId, messageId));
+  }
+
+  // Voice call operations
+  async createVoiceCall(call: InsertVoiceCall): Promise<VoiceCall> {
+    const [voiceCall] = await db.insert(voiceCalls).values(call).returning();
+    return voiceCall;
+  }
+
+  async getVoiceCall(id: string): Promise<VoiceCall | undefined> {
+    const [call] = await db.select().from(voiceCalls).where(eq(voiceCalls.id, id));
+    return call || undefined;
+  }
+
+  async updateVoiceCallStatus(id: string, status: string, endTime?: Date, duration?: number): Promise<VoiceCall | undefined> {
+    const updates: any = { status };
+    if (endTime) updates.endTime = endTime;
+    if (duration) updates.duration = duration;
+    const [call] = await db
+      .update(voiceCalls)
+      .set(updates)
+      .where(eq(voiceCalls.id, id))
+      .returning();
+    return call || undefined;
+  }
+
+  async getChannelActiveCalls(channelId: string): Promise<VoiceCall[]> {
+    return db
+      .select()
+      .from(voiceCalls)
+      .where(
+        and(
+          eq(voiceCalls.channelId, channelId),
+          or(
+            eq(voiceCalls.status, "ringing"),
+            eq(voiceCalls.status, "active")
+          )
+        )
+      );
   }
 }
 

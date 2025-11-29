@@ -10,7 +10,11 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // Serve static files
   app.use(express.static(distPath));
+  
+  // Serve uploads
+  app.use("/uploads", express.static(path.join(process.cwd(), "public", "uploads")));
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
